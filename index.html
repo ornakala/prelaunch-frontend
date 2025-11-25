@@ -95,27 +95,43 @@
             float dist = distance(st, mouse);
             float interaction = smoothstep(0.5, 0.0, dist);
 
-            // Flowing noise
-            float time = uTime * 0.2;
-            float noise1 = snoise(st * 3.0 + time);
-            float noise2 = snoise(st * 6.0 - time * 0.5 + interaction * 2.0);
+            // Flowing noise with multiple layers
+            float time = uTime * 0.15;
+            float noise1 = snoise(st * 2.5 + time);
+            float noise2 = snoise(st * 5.0 - time * 0.7 + interaction * 2.0);
+            float noise3 = snoise(st * 8.0 + time * 0.3);
             
-            // Fluid mixing logic
-            float mixFactor = smoothstep(-0.2, 0.8, noise1 + noise2 * 0.5);
+            // Create metallic flow patterns
+            float metalFlow = snoise(st * 4.0 + vec2(time * 0.5, -time * 0.3));
             
-            // Brand Colors
-            vec3 color1 = vec3(0.667, 0.188, 0.427); // Orchid Plum (#AA306D)
-            vec3 color2 = vec3(0.0, 0.651, 0.576);   // Teal Green (#00A693)
-            vec3 deepBase = vec3(0.05, 0.02, 0.05);  // Very dark background
+            // Luxury metal colors
+            vec3 gold = vec3(0.831, 0.686, 0.216);        // Rich Gold (#D4AF37)
+            vec3 roseGold = vec3(0.722, 0.451, 0.451);    // Rose Gold
+            vec3 platinum = vec3(0.898, 0.898, 0.906);    // Platinum/Silver
+            vec3 deepBlack = vec3(0.02, 0.02, 0.03);      // Deep luxury black
             
-            // Dynamic mixing
-            vec3 finalColor = mix(color1, color2, mixFactor + sin(uTime * 0.5) * 0.2);
+            // Create flowing metallic pattern
+            float mixFactor1 = smoothstep(-0.3, 0.7, noise1 + noise2 * 0.5);
+            float mixFactor2 = smoothstep(0.2, 0.9, metalFlow);
             
-            // Add depth/shadows
-            finalColor = mix(deepBase, finalColor, smoothstep(0.0, 1.0, noise1 + 0.5));
+            // Blend gold and platinum with rose gold accent
+            vec3 metalBlend = mix(gold, platinum, mixFactor1);
+            metalBlend = mix(metalBlend, roseGold, noise3 * 0.3);
             
-            // Mouse glow
-            finalColor += vec3(0.8, 0.8, 1.0) * interaction * 0.3;
+            // Add shimmer effect
+            float shimmer = smoothstep(0.6, 0.8, abs(noise3)) * 0.4;
+            metalBlend += vec3(shimmer);
+            
+            // Mix with deep background for depth
+            vec3 finalColor = mix(deepBlack, metalBlend, smoothstep(-0.2, 0.8, noise1 + 0.3));
+            
+            // Add luxury glow on mouse interaction
+            vec3 glowColor = mix(gold, platinum, sin(uTime * 2.0) * 0.5 + 0.5);
+            finalColor += glowColor * interaction * 0.5;
+            
+            // Subtle vignette for luxury feel
+            float vignette = 1.0 - length(st - 0.5) * 0.8;
+            finalColor *= vignette;
 
             gl_FragColor = vec4(finalColor, 1.0);
         }
